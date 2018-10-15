@@ -115,3 +115,52 @@ JDBC 보다 Domain 모델을 사용하려는 이유
     * getOwner().getMyStudyList().stream().forEach(s -> s.getOwner());
     * Lazy loading을 통해 필요할 때마다 select를 하게 되면 (n+1 select)로 
 
+
+# 엔티티(Entity) 관련 어노테이션 정리
+
+패키지 import시 javax.persistence
+
+* `@Entity`
+   - 도메인 객체로 설정
+   - 보통 클래스와 같은 명칭으로 설정 (변경하고 싶다면 `name` 속성으로 변경 가능)
+   - 엔티티명은 JQL에서 사용
+   
+* `@Table`
+   - 객체를 테이블로 맵핑
+   - 기본적으로 클래스명으로 테이블이 생성
+   - @Entity를 설정시 생략 가능 (추가 옵션이 필요한 경우에 명시)
+   
+* `@Id`
+   - 기본키 설정
+   - primitive 타입과 wrapper 타입으로 사용 가능
+      - primitive 타입일 경우 초기화값이 존재하기 때문에 0이라는 id값이 존재할 경우 중복될 수 있기 때문에 주로 wrapper 타입을 사용
+    
+* `@GeneratedValue`
+   - 기본키 생성 방식 설정
+   - 생성 전략과 생성기를 설정
+   - 기본 전략은 AUTO : 사용하는 DB에 따라 적절한 전략 선택
+      - TABLE, SEQUENCE, IDENTITY 중 하나 선택
+    
+* `@Column`
+   - 프로퍼티를 컬럼으로 맵핑 및 속성 설정
+   - @Entity 설정시 속성들이 Column으로 인식되기 때문에 생략 가능
+    
+* `@Temporal`
+   - Date, Calander만 지원
+   - JPA 2.2부터는 LocalDateTime 등 Java8의 새로운 타입 사용 가능
+
+* `@Transient`
+    - 프로퍼티를 컬럼으로 맵핑하지 않고 객체 내에서만 사용하도록 설정
+    
+
+## JPA 옵션
+
+* `spring.jpa.show-sql=true`
+   - true(SQL 표시), false(SQL 미표시)
+   - JPA로 실행되는 SQL을 콘솔에 출력
+   - 실제 실행되는 SQL을 확인하고 싶다면 logger로 설정
+   
+* `spring.jpa.properties.hibernate.format_sql=true`
+   - true(SQL 정렬), false(SQL 미정렬)
+   - 콘솔에 출력되는 SQL을 보기 쉽게 출력
+   
