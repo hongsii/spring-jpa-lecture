@@ -164,3 +164,40 @@ JDBC 보다 Domain 모델을 사용하려는 이유
    - true(SQL 정렬), false(SQL 미정렬)
    - 콘솔에 출력되는 SQL을 보기 쉽게 출력
    
+   
+# Value 관련 어노테이션 정리
+
+Entity에 종속적인 타입
+
+* `@Embeddable`
+   - 클래스에 어노테이션 선언
+   - 해당 어노테이션이 있는 클래스를 Entity에 넣어줄 때 사용
+   
+* `@Embedded`
+   - 프로퍼티에 어노테이션 선언
+   - Embeddable 클래스를 Entity에 맵핑하고 싶을 때 해당 어노테이션 사용
+   - Entity 내에 동일한 Embeddable 클래스의 프로퍼티를 두 가지 이상 선언하고 싶다면 `@AttributeOverrides` 사용
+* `@AttributeOverrides`, `@AttributeOverride`
+   - name, column 필수 선언
+      - name : Embeddable 클래스의 프로퍼티 명칭
+      - column : 테이블에 설정될 컬럼명
+``` java
+@Embeddable
+public class Address {
+   private String address;
+   private String zipcode;
+   
+}
+
+@Entity
+public class Account {
+   @Id @GeneratedValue
+   private Long id;
+   
+   @Embedded
+   @AttributeOverrides({
+      @AttributeOverride(name = "street", column = @Column(name = "home_street"))
+   })
+   private Address address;
+}
+```
