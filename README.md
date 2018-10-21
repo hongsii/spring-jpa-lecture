@@ -201,3 +201,170 @@ public class Account {
    private Address address;
 }
 ```
+
+# 관계
+
+두 개의 엔티티끼리 관계를 맺을 수 있다.
+
+## 일대다
+
+단방향
+
+`@ManyToOne`
+
+* 프로퍼티가 하나일 때, 해당 어노테이션을 선언
+* 프로퍼티의 PK가 FK가 됨
+
+`@OneToMany (단방향)`
+
+* 프로퍼티가 Collection타입과 같이 여러 개를 가지는 경우 어노테이션 선언
+* 관계를 저장하는 테이블이 생성됨
+
+
+아래는 두 개의 엔티티가 서로 단방향으로만 관계를 맺음
+
+``` java
+@Entity
+public class Owner {
+    
+    @Id @GeneratedValue
+    private Long id;
+
+    private String name;
+
+    @OneToMany
+    privat Set<Study> studies;
+}
+
+@Entity
+public class Study {
+
+    @Id @GeneratedValue
+    private Long id;
+
+    private String name;
+
+    // owner 테이블의 PK(id)가 FK(owner_id)가 된다
+    // 주인은 Study (주인 : 관계를 설정했을 때, 값이 반영되는 경우)
+    @ManyToOne
+    private Owner owner;
+}
+```
+
+양방향
+
+양방향의 관계를 맺으려면 주인 엔티티의 프로퍼티명을 지정해줘야함.
+`@OneToMany(mappedBy = "관계의 주인테이블의 프로퍼티명")`
+
+``` java
+@Entity
+public class Owner {
+    
+    @Id @GeneratedValue
+    private Long id;
+
+    private String name;
+
+    @OneToMany(mappedBy = "owner")
+    privat Set<Study> studies;
+}
+
+@Entity
+public class Study {
+
+    @Id @GeneratedValue
+    private Long id;
+
+    private String name;
+
+    // owner 테이블의 PK(id)가 FK(owner_id)가 된다
+    // 주인은 Study (주인 : 관계를 설정했을 때, 값이 반영되는 곳)
+    @ManyToOne
+    private Owner owner;
+}
+```
+
+양방향이기 때문에 각각의 엔티티에 모두 반영해줘야한다.
+
+
+```
+Study study = new Study();
+Owner owner = new Owner();
+owner.getStudies().add(study);
+study.setOwner(owner);
+```
+
+# 엔티티의 상태와 Cascade
+
+Cascade : 관계 어노테이션의 속성
+
+* 연관된 엔티티로 변경된 엔티티의 상태 변화를 전파
+* 4가자의 상태가 존재
+    * Transient
+        - JPA가 객체에 대해 전혀 모르는 상태 (객체의 저장여부를 모르는 상태)
+    * Persistent
+        - session의 save() 메소드가 호출되면 JPA에서 관리하는 객체가 됨
+        - insert 쿼리가 바로 발생되지 않음
+        - Persistent Context에 인스턴스가 추가되어 1차 캐시가 됨
+        - Persistent 상태의 인스턴스를 조회하게 되면 DB에서 조회하지 않고 1차 캐시 상태의 인스턴스가 조회됨
+        - 트랜잭션이 끝나면 insert 쿼리가 발생함
+        - 객체의 변경사항이 모니터링되고 변경이 생기면 변경사항이 반영됨
+            - Dirty checking : 변경사항을 계속 감지
+            - Write behind : 객체의 상태 변화를 필요한 시점에 반영
+    * Detached
+        - 트랜잭션이 종료되고 난 뒤 변경되는 상태
+        - JPA에 의해 관리되지 않음
+        - 다시 관리가 필요하면 redetached 되어 persistent 상태가 된다
+    * Removed
+
+
+부모-자식간의 관계일 때, cascade를 지정하면 부모가 반영될 때, 부모의 상태가 자식에도 전파된다.
+
+Cascade.REMOVED 옵션이 걸려있다면 부모 엔티티를 삭제시키면 REMOVED 상태가 전파되어 자식 엔티티도 같이 삭제가 된다.
+
+# Fetch
+
+연관 관계의 엔티티를 언제 가져올 지 결정하는 옵션
+
+`@OneToMany(mappedBy = "owner", ... , fetch = FetchType.LAZY)` fetch 옵션이 생략되어 있다면 **기본적으로  LAZY**가 적용됨
+
+반대로 `@ManyToOne`의 경우는 가져와야할 값이 하나밖에 없기 때문에 기본적으로 EAGER가 적용되어있음
+
+
+# JPA
+
+6-7년 전에는 아래와 같이 구현해서 사용
+
+``` java
+@Repository
+@Transactional
+public class PostRepository {
+    
+    @PersistenceContext
+    EntityManager entityManager;
+
+    public Post add(Post post) {
+        return entityManager.persis(post);
+    }
+
+    public void delete(Post post) {
+        entityManager.remove(post);
+    }
+
+    public List<Post> findAll() {
+        return entityManager.createQuery("SELECT p FROM Post As p")
+                .getResultList();
+    }
+}
+```
+
+* Spring Data JPA에서는 **인터페이스만 만들어도 되도록 개발**되어 옛날보다 훨씬 편하게 사용 가능
+*`@Repository`를 선언하지 않아도 `JpaRepositoriesRegistrar`에서 빈으로 등록해줌
+* 기본적인 CRUD 메소드를 제공하기 때문에 별다른 코드를 작성할 필요가 없음
+
+``` java
+// JpaRepository<Entity, id타입>
+public interface PostRepository extends JpaRepository<Post, Long> {
+
+}
+```
