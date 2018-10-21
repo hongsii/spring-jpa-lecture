@@ -359,7 +359,7 @@ public class PostRepository {
 ```
 
 * Spring Data JPA에서는 **인터페이스만 만들어도 되도록 개발**되어 옛날보다 훨씬 편하게 사용 가능
-*`@Repository`를 선언하지 않아도 `JpaRepositoriesRegistrar`에서 빈으로 등록해줌
+* `@Repository`를 선언하지 않아도 `JpaRepositoriesRegistrar`에서 빈으로 등록해줌
 * 기본적인 CRUD 메소드를 제공하기 때문에 별다른 코드를 작성할 필요가 없음
 
 ``` java
