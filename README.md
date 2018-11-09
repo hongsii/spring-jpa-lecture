@@ -368,3 +368,50 @@ public interface PostRepository extends JpaRepository<Post, Long> {
 
 }
 ```
+
+# 2부 스프링 데이터 JPA 활용
+
+[Spring Data](http://projects.spring.io/spring-data/는 여러 프로젝트로 구성되어있음.
+
+* Spring Data Common : 여러 저장소 지원 프로젝트의 공통 기능 제공
+* Spring Data REST : 저장소 데이터를 HTTP 리소스로 제공하는 프로젝트
+* SPring Data JPA : Common의 확장판 (JPA 관련 기능 추가)
+
+## Spring Data Common
+
+
+`JpaRepository`는 JPA 프로젝트에 존재하며,  `PagingAndSortingRepository`를 구현한 인터페이스
+
+아래 인터페이스는 Common에 속해있는 인터페이스
+
+* Repository<T, ID>
+* CrudRepository<T, ID> extends Repository<T, ID>
+    - 기본적인 CRUD 메소드가 구현되어있음
+* PagingAndSortingRepository extends CrudRepository<T, ID>
+
+### 쿼리 생성 방법
+
+`@EnableJpaRepositories(queryLookupStrategy = ...)`의 queryLookupStrategy로 쿼리 생성 방법을 지정할 수 있음
+
+* Key.CREATE : 메소드명을 분석해서 쿼리를 만들어줌
+* Key.USE_DECLARED_QUERY : `@Query` 어노테이션으로 JPQL 작성 - 구현체마다 다름
+* Key.CREATE_IF_NOT_FOUND : 미리 정의한 @Query를 찾고 없으면 메소드명을 분석해 생성
+
+#### 쿼리 만드는 방법
+
+리턴타입 {접두어}{도입부}By{프로퍼티 표현식}{조건식}{And | Or}{프로퍼티 표현식}{조건식}{정렬 조건}{매개변수}
+
+* 접두어 : Find, Get, Query, Count, ...
+* 도입부 : Distinct, First(N), Top(N)
+* 프로퍼티 표현식 : Person, Address, ZipCode => findPersonByAddress_ZipCode(...)
+* 조건식 : IgnoreCase, Between, LessThan, GreaterThan, Like, Contains, ...
+* 정렬 조건 : OrderBy{프로퍼티}Asc|Desc
+* 리턴 타입 : E, Optional<E>, List<E>, Page<E>, Slice<E>, Stream<E>
+* 매겨변수 : Pageable, Sort
+
+#### 미리 선언된 쿼리 찾는 방법
+
+* 메소드명으로 쿼리를 표현하기 힘든 경우에 `@Query` 사용
+* 저장소 기술마다 구현 방법이 다름
+* JPA : @Query @NamedQuery
+
